@@ -37,6 +37,7 @@ endif(NOT ZXCVBN_LIBRARIES)
 configure_file(version.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 
 set(keepassx_SOURCES
+    core/Alloc.cpp
     core/AutoTypeAssociations.cpp
     core/AsyncTask.h
     core/Config.cpp
