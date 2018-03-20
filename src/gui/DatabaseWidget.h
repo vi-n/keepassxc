@@ -132,7 +132,7 @@ signals:
     void mainSplitterSizesChanged();
     void detailSplitterSizesChanged();
     void entryViewStateChanged();
-    void updateSearch(QString text);
+    void clearSearch();
 
 public slots:
     void createEntry();
