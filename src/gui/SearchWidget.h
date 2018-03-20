@@ -35,15 +35,17 @@ class SearchWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit SearchWidget(QWidget* parent = 0);
-    ~SearchWidget();
+    explicit SearchWidget(QWidget* parent = nullptr);
+    ~SearchWidget() override;
+
+    Q_DISABLE_COPY(SearchWidget)
 
     void connectSignals(SignalMultiplexer& mx);
     void setCaseSensitive(bool state);
     void setLimitGroup(bool state);
 
 protected:
-    bool eventFilter(QObject* obj, QEvent* event);
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 signals:
     void search(const QString& text);
@@ -55,7 +57,7 @@ signals:
     void enterPressed();
 
 public slots:
-    void databaseChanged(DatabaseWidget* dbWidget = 0);
+    void databaseChanged(DatabaseWidget* dbWidget = nullptr);
 
 private slots:
     void startSearchTimer();
@@ -69,8 +71,6 @@ private:
     QTimer* m_searchTimer;
     QAction* m_actionCaseSensitive;
     QAction* m_actionLimitGroup;
-
-    Q_DISABLE_COPY(SearchWidget)
 };
 
 #endif // SEARCHWIDGET_H
