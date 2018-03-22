@@ -95,7 +95,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_entryView = new EntryView(rightHandSideWidget);
     m_entryView->setObjectName("entryView");
     m_entryView->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_entryView->setGroup(db->rootGroup());
+    m_entryView->displayGroup(db->rootGroup());
     connect(m_entryView, SIGNAL(customContextMenuRequested(QPoint)), SLOT(emitEntryContextMenuRequested(QPoint)));
 
     // Add a notification for when we are searching
@@ -302,7 +302,7 @@ bool DatabaseWidget::isUsernamesHidden() const
 /**
  * Set state of entry view 'Hide Usernames' setting
  */
-void DatabaseWidget::setUsernamesHidden(const bool hide)
+void DatabaseWidget::setUsernamesHidden(bool hide)
 {
     m_entryView->setUsernamesHidden(hide);
 }
@@ -318,7 +318,7 @@ bool DatabaseWidget::isPasswordsHidden() const
 /**
  * Set state of entry view 'Hide Passwords' setting
  */
-void DatabaseWidget::setPasswordsHidden(const bool hide)
+void DatabaseWidget::setPasswordsHidden(bool hide)
 {
     m_entryView->setPasswordsHidden(hide);
 }
@@ -1070,7 +1070,7 @@ void DatabaseWidget::search(const QString& searchtext)
 
     QList<Entry*> searchResult = EntrySearcher().search(searchtext, searchGroup, caseSensitive);
 
-    m_entryView->setEntryList(searchResult);
+    m_entryView->displaySearch(searchResult);
     m_lastSearchText = searchtext;
 
     // Display a label detailing our search results
@@ -1106,7 +1106,7 @@ void DatabaseWidget::onGroupChanged(Group* group)
         // Otherwise cancel search
         emit clearSearch();
     } else {
-        m_entryView->setGroup(group);
+        m_entryView->displayGroup(group);
     }
 }
 
@@ -1121,7 +1121,7 @@ void DatabaseWidget::endSearch()
         emit listModeAboutToActivate();
 
         // Show the normal entry view of the current group
-        m_entryView->setGroup(currentGroup());
+        m_entryView->displayGroup(currentGroup());
 
         emit listModeActivated();
     }
