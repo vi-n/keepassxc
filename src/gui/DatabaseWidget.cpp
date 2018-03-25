@@ -1064,11 +1064,9 @@ void DatabaseWidget::search(const QString& searchtext)
 
     emit searchModeAboutToActivate();
 
-    Qt::CaseSensitivity caseSensitive = m_searchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
-
     Group* searchGroup = m_searchLimitGroup ? currentGroup() : m_db->rootGroup();
 
-    QList<Entry*> searchResult = EntrySearcher().search(searchtext, searchGroup, caseSensitive);
+    QList<Entry*> searchResult = EntrySearcher(m_searchCaseSensitive).search(searchtext, searchGroup);
 
     m_entryView->displaySearch(searchResult);
     m_lastSearchText = searchtext;

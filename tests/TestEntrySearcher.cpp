@@ -86,14 +86,14 @@ void TestEntrySearcher::testSearch()
     e3b->setNotes("test search test");
     e3b->setGroup(group3);
 
-    m_searchResult = m_entrySearcher.search("search term", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("search term", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 2);
 
-    m_searchResult = m_entrySearcher.search("search term", group211, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("search term", group211);
     QCOMPARE(m_searchResult.count(), 1);
 
     // Parent group disabled search
-    m_searchResult = m_entrySearcher.search("search term", group11, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("search term", group11);
     QCOMPARE(m_searchResult.count(), 0);
 }
 
@@ -104,22 +104,22 @@ void TestEntrySearcher::testAndConcatenationInSearch()
     entry->setTitle("jkl");
     entry->setGroup(m_groupRoot);
 
-    m_searchResult = m_entrySearcher.search("", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
 
-    m_searchResult = m_entrySearcher.search("def", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("def", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
 
-    m_searchResult = m_entrySearcher.search("  abc    ghi  ", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("  abc    ghi  ", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
 
-    m_searchResult = m_entrySearcher.search("ghi ef", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("ghi ef", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
 
-    m_searchResult = m_entrySearcher.search("abc ef xyz", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("abc ef xyz", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 0);
 
-    m_searchResult = m_entrySearcher.search("abc kl", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("abc kl", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
 }
 
@@ -133,7 +133,46 @@ void TestEntrySearcher::testAllAttributesAreSearched()
     entry->setUrl("testUrl");
     entry->setNotes("testNote");
 
-    m_searchResult =
-        m_entrySearcher.search("testTitle testUsername testUrl testNote", m_groupRoot, Qt::CaseInsensitive);
+    m_searchResult = m_entrySearcher.search("testTitle testUsername testUrl testNote", m_groupRoot);
     QCOMPARE(m_searchResult.count(), 1);
+}
+
+void TestEntrySearcher::testSearchTermParser()
+{
+    // Test standard search terms
+    auto terms = m_entrySearcher.parseSearchTerms("-test \"quoted \\\"string\\\"\"  user:user pass:\"test me\" noquote  ");
+
+    QCOMPARE(terms.length(), 5);
+
+    QCOMPARE(terms[0]->field, EntrySearcher::All);
+    QCOMPARE(terms[0]->word, "test");
+    QCOMPARE(terms[0]->exclude, true);
+
+    QCOMPARE(terms[1]->field, EntrySearcher::All);
+    QCOMPARE(terms[1]->word, "quoted \\\"string\\\"");
+    QCOMPARE(terms[1]->exclude, false);
+
+    QCOMPARE(terms[2]->field, EntrySearcher::Username);
+    QCOMPARE(terms[2]->word, "user");
+
+    QCOMPARE(terms[3]->field, EntrySearcher::Password);
+    QCOMPARE(terms[3]->word, "test me");
+
+    QCOMPARE(terms[4]->field, EntrySearcher::All);
+    QCOMPARE(terms[4]->word, "noquote");
+
+    qDeleteAll(terms);
+
+    // Test wildcard and regex search terms
+    terms = m_entrySearcher.parseSearchTerms("+url:*.google.com *user:\\d+\\w{2}");
+
+    QCOMPARE(terms.length(), 2);
+
+    QCOMPARE(terms[0]->field, EntrySearcher::Url);
+    QCOMPARE(terms[0]->regex.pattern(), "^.*\\.google\\.com$");
+
+    QCOMPARE(terms[1]->field, EntrySearcher::Username);
+    QCOMPARE(terms[1]->regex.pattern(), "\\d+\\w{2}");
+
+    qDeleteAll(terms);
 }
