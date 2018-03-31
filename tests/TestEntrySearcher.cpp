@@ -145,21 +145,21 @@ void TestEntrySearcher::testSearchTermParser()
     QCOMPARE(terms.length(), 5);
 
     QCOMPARE(terms[0]->field, EntrySearcher::All);
-    QCOMPARE(terms[0]->word, "test");
+    QCOMPARE(terms[0]->word, QString("test"));
     QCOMPARE(terms[0]->exclude, true);
 
     QCOMPARE(terms[1]->field, EntrySearcher::All);
-    QCOMPARE(terms[1]->word, "quoted \\\"string\\\"");
+    QCOMPARE(terms[1]->word, QString("quoted \\\"string\\\""));
     QCOMPARE(terms[1]->exclude, false);
 
     QCOMPARE(terms[2]->field, EntrySearcher::Username);
-    QCOMPARE(terms[2]->word, "user");
+    QCOMPARE(terms[2]->word, QString("user"));
 
     QCOMPARE(terms[3]->field, EntrySearcher::Password);
-    QCOMPARE(terms[3]->word, "test me");
+    QCOMPARE(terms[3]->word, QString("test me"));
 
     QCOMPARE(terms[4]->field, EntrySearcher::All);
-    QCOMPARE(terms[4]->word, "noquote");
+    QCOMPARE(terms[4]->word, QString("noquote"));
 
     qDeleteAll(terms);
 
@@ -169,10 +169,10 @@ void TestEntrySearcher::testSearchTermParser()
     QCOMPARE(terms.length(), 2);
 
     QCOMPARE(terms[0]->field, EntrySearcher::Url);
-    QCOMPARE(terms[0]->regex.pattern(), "^.*\\.google\\.com$");
+    QCOMPARE(terms[0]->regex.pattern(), QString("^.*\\.google\\.com$"));
 
     QCOMPARE(terms[1]->field, EntrySearcher::Username);
-    QCOMPARE(terms[1]->regex.pattern(), "\\d+\\w{2}");
+    QCOMPARE(terms[1]->regex.pattern(), QString("\\d+\\w{2}"));
 
     qDeleteAll(terms);
 }

@@ -63,6 +63,10 @@ bool EntrySearcher::searchEntryImpl(const QString& searchString, Entry* entry)
     auto searchTerms = parseSearchTerms(searchString);
     bool found;
 
+    // Pre-load in case they are needed
+    auto attributes = QStringList(entry->attributes()->keys());
+    auto attachments = QStringList(entry->attachments()->keys());
+
     for (SearchTerm* term : searchTerms) {
         switch (term->field) {
         case Field::Title:
@@ -81,10 +85,10 @@ bool EntrySearcher::searchEntryImpl(const QString& searchString, Entry* entry)
             found = term->regex.match(entry->notes()).hasMatch();
             break;
         case Field::Attribute:
-            found = !entry->attributes()->keys().filter(term->regex).empty();
+            found = !attributes.filter(term->regex).empty();
             break;
         case Field::Attachment:
-            found = !entry->attachments()->keys().filter(term->regex).empty();
+            found = !attachments.filter(term->regex).empty();
             break;
         default:
             found = term->regex.match(entry->resolvePlaceholder(entry->title())).hasMatch() ||
