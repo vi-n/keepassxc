@@ -144,11 +144,11 @@ void TestEntrySearcher::testSearchTermParser()
 
     QCOMPARE(terms.length(), 5);
 
-    QCOMPARE(terms[0]->field, EntrySearcher::All);
+    QCOMPARE(terms[0]->field, EntrySearcher::Undefined);
     QCOMPARE(terms[0]->word, QString("test"));
     QCOMPARE(terms[0]->exclude, true);
 
-    QCOMPARE(terms[1]->field, EntrySearcher::All);
+    QCOMPARE(terms[1]->field, EntrySearcher::Undefined);
     QCOMPARE(terms[1]->word, QString("quoted \\\"string\\\""));
     QCOMPARE(terms[1]->exclude, false);
 
@@ -158,10 +158,8 @@ void TestEntrySearcher::testSearchTermParser()
     QCOMPARE(terms[3]->field, EntrySearcher::Password);
     QCOMPARE(terms[3]->word, QString("test me"));
 
-    QCOMPARE(terms[4]->field, EntrySearcher::All);
+    QCOMPARE(terms[4]->field, EntrySearcher::Undefined);
     QCOMPARE(terms[4]->word, QString("noquote"));
-
-    qDeleteAll(terms);
 
     // Test wildcard and regex search terms
     terms = m_entrySearcher.parseSearchTerms("+url:*.google.com *user:\\d+\\w{2}");
@@ -173,6 +171,4 @@ void TestEntrySearcher::testSearchTermParser()
 
     QCOMPARE(terms[1]->field, EntrySearcher::Username);
     QCOMPARE(terms[1]->regex.pattern(), QString("\\d+\\w{2}"));
-
-    qDeleteAll(terms);
 }

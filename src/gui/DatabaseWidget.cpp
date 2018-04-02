@@ -220,7 +220,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
     m_fileWatchUnblockTimer.setSingleShot(true);
     m_ignoreAutoReload = false;
 
-    m_searchCaseSensitive = false;
+    m_EntrySearcher = new EntrySearcher(false);
     m_searchLimitGroup = config()->get("SearchLimitGroup", false).toBool();
 
 #ifdef WITH_XC_SSHAGENT
@@ -238,6 +238,7 @@ DatabaseWidget::DatabaseWidget(Database* db, QWidget* parent)
 
 DatabaseWidget::~DatabaseWidget()
 {
+    delete m_EntrySearcher;
 }
 
 DatabaseWidget::Mode DatabaseWidget::currentMode() const
@@ -1066,13 +1067,13 @@ void DatabaseWidget::search(const QString& searchtext)
 
     Group* searchGroup = m_searchLimitGroup ? currentGroup() : m_db->rootGroup();
 
-    QList<Entry*> searchResult = EntrySearcher(m_searchCaseSensitive).search(searchtext, searchGroup);
+    QList<Entry*> searchResult = m_EntrySearcher->search(searchtext, searchGroup);
 
     m_entryView->displaySearch(searchResult);
     m_lastSearchText = searchtext;
 
     // Display a label detailing our search results
-    if (searchResult.size() > 0) {
+    if (!searchResult.isEmpty()) {
         m_searchingLabel->setText(tr("Search Results (%1)").arg(searchResult.size()));
     } else {
         m_searchingLabel->setText(tr("No Results"));
@@ -1085,7 +1086,7 @@ void DatabaseWidget::search(const QString& searchtext)
 
 void DatabaseWidget::setSearchCaseSensitive(bool state)
 {
-    m_searchCaseSensitive = state;
+    m_EntrySearcher->setCaseSensitive(state);
     refreshSearch();
 }
 

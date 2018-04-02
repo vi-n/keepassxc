@@ -19,9 +19,12 @@
 #include "EntrySearcher.h"
 
 #include "core/Group.h"
+#include "core/Tools.h"
 
-EntrySearcher::EntrySearcher(bool caseSensitive) :
-    m_caseSensitive(caseSensitive)
+EntrySearcher::EntrySearcher(bool caseSensitive)
+    : m_caseSensitive(caseSensitive)
+    , m_termParser(R"re(([-*+]+)?(?:(\w*):)?(?:(?=")"((?:[^"\\]|\\.)*)"|([^ ]*))( |$))re")
+    // Group 1 = modifiers, Group 2 = field, Group 3 = quoted string, Group 4 = unquoted string
 {
 }
 
@@ -58,16 +61,21 @@ void EntrySearcher::setCaseSensitive(bool state)
     m_caseSensitive = state;
 }
 
+bool EntrySearcher::isCaseSensitive()
+{
+    return m_caseSensitive;
+}
+
 bool EntrySearcher::searchEntryImpl(const QString& searchString, Entry* entry)
 {
-    auto searchTerms = parseSearchTerms(searchString);
-    bool found;
-
     // Pre-load in case they are needed
     auto attributes = QStringList(entry->attributes()->keys());
     auto attachments = QStringList(entry->attachments()->keys());
 
-    for (SearchTerm* term : searchTerms) {
+    bool found;
+    auto searchTerms = parseSearchTerms(searchString);
+
+    for (const auto& term : searchTerms) {
         switch (term->field) {
         case Field::Title:
             found = term->regex.match(entry->resolvePlaceholder(entry->title())).hasMatch();
@@ -106,18 +114,14 @@ bool EntrySearcher::searchEntryImpl(const QString& searchString, Entry* entry)
     return true;
 }
 
-QList<EntrySearcher::SearchTerm*> EntrySearcher::parseSearchTerms(const QString& searchString)
+QList<QSharedPointer<EntrySearcher::SearchTerm> > EntrySearcher::parseSearchTerms(const QString& searchString)
 {
-    auto terms = QList<SearchTerm*>();
-    // Group 1 = modifiers, Group 2 = field, Group 3 = quoted string, Group 4 = unquoted string
-    auto termParser = QRegularExpression(R"re(([-*+]+)?(?:(\w*):)?(?:(?=")"((?:[^"\\]|\\.)*)"|([^ ]*))( |$))re");
-    // Escape common regex symbols except for *, ?, and |
-    auto regexEscape = QRegularExpression(R"re(([-[\]{}()+.,\\\/^$#]))re");
+    auto terms = QList<QSharedPointer<SearchTerm> >();
 
-    auto results = termParser.globalMatch(searchString);
+    auto results = m_termParser.globalMatch(searchString);
     while (results.hasNext()) {
         auto result = results.next();
-        auto term = new SearchTerm();
+        QSharedPointer<SearchTerm> term(new SearchTerm());
 
         // Quoted string group
         term->word = result.captured(3);
@@ -129,32 +133,16 @@ QList<EntrySearcher::SearchTerm*> EntrySearcher::parseSearchTerms(const QString&
 
         // If still empty, ignore this match
         if (term->word.isEmpty()) {
-            delete term;
             continue;
         }
 
-        QString regex = term->word;
+        auto mods = result.captured(1);
 
-        // Wildcard support (*, ?, |)
-        if (!result.captured(1).contains("*")) {
-            regex.replace(regexEscape, "\\\\1");
-            regex.replace("**", "*");
-            regex.replace("*", ".*");
-            regex.replace("?", ".");
-        }
-
-        term->regex = QRegularExpression(regex);
-        if (!m_caseSensitive) {
-            term->regex.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
-        }
-
-        // Exact modifier
-        if (result.captured(1).contains("+")) {
-            term->regex.setPattern("^" + term->regex.pattern() + "$");
-        }
+        // Convert term to regex
+        term->regex = Tools::convertToRegex(term->word, !mods.contains("*"), mods.contains("+"), m_caseSensitive);
 
         // Exclude modifier
-        term->exclude = result.captured(1).contains("-");
+        term->exclude = mods.contains("-");
 
         // Determine the field to search
         QString field = result.captured(2);
@@ -175,7 +163,7 @@ QList<EntrySearcher::SearchTerm*> EntrySearcher::parseSearchTerms(const QString&
             } else if (field.startsWith("attach", cs)) {
                 term->field = Field::Attachment;
             } else {
-                term->field = Field::All;
+                term->field = Field::Undefined;
             }
         }
 

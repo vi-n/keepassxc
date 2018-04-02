@@ -28,18 +28,19 @@ class Entry;
 class EntrySearcher
 {
 public:
-    EntrySearcher(bool caseSensitive = false);
+    explicit EntrySearcher(bool caseSensitive = false);
 
     QList<Entry*> search(const QString& searchString, const Group* group);
     QList<Entry*> searchEntries(const QString& searchString, const QList<Entry*>& entries);
 
     void setCaseSensitive(bool state);
+    bool isCaseSensitive();
 
 private:
     bool searchEntryImpl(const QString& searchString, Entry* entry);
 
     enum Field {
-        All,
+        Undefined,
         Title,
         Username,
         Password,
@@ -57,9 +58,10 @@ private:
         bool exclude;
     };
 
-    QList<SearchTerm*> parseSearchTerms(const QString& searchString);
+    QList<QSharedPointer<SearchTerm> > parseSearchTerms(const QString& searchString);
 
     bool m_caseSensitive;
+    QRegularExpression m_termParser;
 
     friend class TestEntrySearcher;
 };
