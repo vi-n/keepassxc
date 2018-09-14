@@ -121,7 +121,7 @@ QList<QSharedPointer<EntrySearcher::SearchTerm> > EntrySearcher::parseSearchTerm
     auto results = m_termParser.globalMatch(searchString);
     while (results.hasNext()) {
         auto result = results.next();
-        QSharedPointer<SearchTerm> term(new SearchTerm());
+        auto term = QSharedPointer<SearchTerm>::create();
 
         // Quoted string group
         term->word = result.captured(3);

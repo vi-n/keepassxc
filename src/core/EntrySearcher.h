@@ -39,7 +39,7 @@ public:
 private:
     bool searchEntryImpl(const QString& searchString, Entry* entry);
 
-    enum Field {
+    enum class Field {
         Undefined,
         Title,
         Username,

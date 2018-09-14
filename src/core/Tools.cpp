@@ -357,7 +357,6 @@ QRegularExpression convertToRegex(const QString& string, bool useWildcards, bool
     // Wildcard support (*, ?, |)
     if (useWildcards) {
         pattern.replace(regexEscape, "\\\\1");
-        pattern.replace("**", "*");
         pattern.replace("*", ".*");
         pattern.replace("?", ".");
     }
