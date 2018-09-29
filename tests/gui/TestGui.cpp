@@ -191,6 +191,7 @@ void TestGui::testCreateDatabase()
 
     // check key and encryption
     QCOMPARE(m_db->key()->keys().size(), 2);
+    QCOMPARE(m_db->kdf()->rounds(), 2);
     QCOMPARE(m_db->kdf()->uuid(), KeePass2::KDF_ARGON2);
     QCOMPARE(m_db->cipher(), KeePass2::CIPHER_AES256);
     auto compositeKey = QSharedPointer<CompositeKey>::create();
@@ -217,7 +218,40 @@ void TestGui::createDatabaseCallback()
     QTest::keyClick(wizard, Qt::Key_Enter);
     QCOMPARE(wizard->currentId(), 1);
 
-    QTest::keyClick(wizard, Qt::Key_Enter);
+    auto decryptionTimeSlider = wizard->currentPage()->findChild<QSlider*>("decryptionTimeSlider");
+    auto algorithmComboBox = wizard->currentPage()->findChild<QComboBox*>("algorithmComboBox");
+    QTRY_VERIFY(decryptionTimeSlider->isVisible());
+    QVERIFY(!algorithmComboBox->isVisible());
+    auto advancedToggle = wizard->currentPage()->findChild<QPushButton*>("advancedSettingsButton");
+    QTest::mouseClick(advancedToggle, Qt::MouseButton::LeftButton);
+    QTRY_VERIFY(!decryptionTimeSlider->isVisible());
+    QVERIFY(algorithmComboBox->isVisible());
+
+    auto rounds = wizard->currentPage()->findChild<QSpinBox*>("transformRoundsSpinBox");
+    QVERIFY(rounds);
+    QVERIFY(rounds->isVisible());
+    QTest::mouseClick(rounds, Qt::MouseButton::LeftButton);
+    QTest::keyClick(rounds, Qt::Key_A, Qt::ControlModifier);
+    QTest::keyClicks(rounds, "2");
+    QTest::keyClick(rounds, Qt::Key_Tab);
+    QTest::keyClick(rounds, Qt::Key_Tab);
+
+    auto memory = wizard->currentPage()->findChild<QSpinBox*>("memorySpinBox");
+    QVERIFY(memory);
+    QVERIFY(memory->isVisible());
+    QTest::mouseClick(memory, Qt::MouseButton::LeftButton);
+    QTest::keyClick(memory, Qt::Key_A, Qt::ControlModifier);
+    QTest::keyClicks(memory, "50");
+    QTest::keyClick(memory, Qt::Key_Tab);
+
+    auto parallelism = wizard->currentPage()->findChild<QSpinBox*>("parallelismSpinBox");
+    QVERIFY(parallelism);
+    QVERIFY(parallelism->isVisible());
+    QTest::mouseClick(parallelism, Qt::MouseButton::LeftButton);
+    QTest::keyClick(parallelism, Qt::Key_A, Qt::ControlModifier);
+    QTest::keyClicks(parallelism, "1");
+    QTest::keyClick(parallelism, Qt::Key_Enter);
+
     QCOMPARE(wizard->currentId(), 2);
 
     // enter password
@@ -226,7 +260,7 @@ void TestGui::createDatabaseCallback()
     auto* passwordEdit = passwordWidget->findChild<QLineEdit*>("enterPasswordEdit");
     auto* passwordRepeatEdit = passwordWidget->findChild<QLineEdit*>("repeatPasswordEdit");
     QTRY_VERIFY(passwordEdit->isVisible());
-    QVERIFY(passwordEdit->hasFocus());
+    QTRY_VERIFY(passwordEdit->hasFocus());
     QTest::keyClicks(passwordEdit, "test");
     QTest::keyClick(passwordEdit, Qt::Key::Key_Tab);
     QTest::keyClicks(passwordRepeatEdit, "test");
