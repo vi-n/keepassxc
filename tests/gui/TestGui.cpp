@@ -18,6 +18,7 @@
 
 #include "TestGui.h"
 #include "TestGlobal.h"
+#include "gui/Application.h"
 
 #include <QAction>
 #include <QApplication>
@@ -39,6 +40,7 @@
 #include <QToolButton>
 
 #include "config-keepassx-tests.h"
+#include "core/Bootstrap.h"
 #include "core/Config.h"
 #include "core/Database.h"
 #include "core/Entry.h"
@@ -78,6 +80,7 @@ void TestGui::initTestCase()
 {
     QVERIFY(Crypto::init());
     Config::createTempFileInstance();
+    Bootstrap::bootstrapApplication();
     // Disable autosave so we can test the modified file indicator
     config()->set("AutoSaveAfterEveryChange", false);
     // Enable the tray icon so we can test hiding/restoring the window
@@ -86,6 +89,7 @@ void TestGui::initTestCase()
     config()->set("GUI/AdvancedSettings", false);
 
     m_mainWindow = new MainWindow();
+    Bootstrap::restoreMainWindowState(*m_mainWindow);
     m_tabWidget = m_mainWindow->findChild<DatabaseTabWidget*>("tabWidget");
     m_mainWindow->show();
     m_mainWindow->activateWindow();
