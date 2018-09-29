@@ -47,7 +47,7 @@ Database::Database()
     , m_emitModified(false)
     , m_uuid(QUuid::createUuid())
 {
-    m_data.cipher = KeePass2::CIPHER_AES;
+    m_data.cipher = KeePass2::CIPHER_AES256;
     m_data.compressionAlgo = CompressionGZip;
 
     // instantiate default AES-KDF with legacy KDBX3 flag set

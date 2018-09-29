@@ -291,7 +291,7 @@ if(WITH_COVERAGE)
   set(COVERAGE_GCOVR_EXCLUDES
           "\\(.+/\\)?tests/.\\*"
           ".\\*/moc_\\[^/\\]+\\.cpp"
-          ".\\*/ui_\\[^/\\]+\\.h"
+          ".\\*/[^/\\]+\\.h"
           "\\(.+/\\)?zxcvbn/.\\*")
   append_coverage_compiler_flags()
   setup_target_for_coverage_gcovr_html(
