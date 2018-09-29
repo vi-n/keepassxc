@@ -17,7 +17,6 @@
  */
 
 #include "PasswordGenerator.h"
-
 #include "crypto/Random.h"
 #include <zxcvbn.h>
 
@@ -33,15 +32,11 @@ PasswordGenerator::PasswordGenerator()
 
 double PasswordGenerator::calculateEntropy(QString password)
 {
-    return ZxcvbnMatch(password.toLatin1(), 0, 0);
+    return ZxcvbnMatch(password.toLatin1(), nullptr, nullptr);
 }
 
-void PasswordGenerator::setLength(int length)
+void PasswordGenerator::setLength(size_t length)
 {
-    if (length <= 0) {
-        m_length = DefaultLength;
-        return;
-    }
     m_length = length;
 }
 
@@ -80,50 +75,35 @@ QString PasswordGenerator::generatePassword() const
     QString password;
 
     if (m_flags & CharFromEveryGroup) {
-        for (int i = 0; i < groups.size(); i++) {
-            int pos = randomGen()->randomUInt(groups[i].size());
+        for (const auto& group : groups) {
+            int pos = randomGen()->randomUInt(static_cast<quint32>(group.size()));
 
-            password.append(groups[i][pos]);
+            password.append(group[pos]);
         }
 
-        for (int i = groups.size(); i < m_length; i++) {
-            int pos = randomGen()->randomUInt(passwordChars.size());
+        for (auto i = static_cast<size_t>(groups.size()); i < m_length; i++) {
+            int pos = randomGen()->randomUInt(static_cast<quint32>(passwordChars.size()));
 
             password.append(passwordChars[pos]);
         }
 
         // shuffle chars
         for (int i = (password.size() - 1); i >= 1; i--) {
-            int j = randomGen()->randomUInt(i + 1);
+            int j = randomGen()->randomUInt(static_cast<quint32>(i + 1));
 
             QChar tmp = password[i];
             password[i] = password[j];
             password[j] = tmp;
         }
     } else {
-        for (int i = 0; i < m_length; i++) {
-            int pos = randomGen()->randomUInt(passwordChars.size());
+        for (std::size_t i = 0; i < m_length; i++) {
+            int pos = randomGen()->randomUInt(static_cast<quint32>(passwordChars.size()));
 
             password.append(passwordChars[pos]);
         }
     }
 
     return password;
-}
-
-int PasswordGenerator::getbits() const
-{
-    const QVector<PasswordGroup> groups = passwordGroups();
-
-    int bits = 0;
-    QVector<QChar> passwordChars;
-    for (const PasswordGroup& group : groups) {
-        bits += group.size();
-    }
-
-    bits *= m_length;
-
-    return bits;
 }
 
 bool PasswordGenerator::isValid() const
@@ -138,11 +118,7 @@ bool PasswordGenerator::isValid() const
         return false;
     }
 
-    if (passwordGroups().size() == 0) {
-        return false;
-    }
-
-    return true;
+    return !passwordGroups().isEmpty();
 }
 
 QVector<PasswordGroup> PasswordGenerator::passwordGroups() const
@@ -309,9 +285,9 @@ QVector<PasswordGroup> PasswordGenerator::passwordGroups() const
     return passwordGroups;
 }
 
-int PasswordGenerator::numCharClasses() const
+size_t PasswordGenerator::numCharClasses() const
 {
-    int numClasses = 0;
+    std::size_t numClasses = 0;
 
     if (m_classes & LowerLetters) {
         numClasses++;

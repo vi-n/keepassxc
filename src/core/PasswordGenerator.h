@@ -58,7 +58,7 @@ public:
     PasswordGenerator();
 
     double calculateEntropy(QString password);
-    void setLength(int length);
+    void setLength(size_t length);
     void setCharClasses(const CharClasses& classes);
     void setFlags(const GeneratorFlags& flags);
     void setExcludedChars(const QString& chars);
@@ -66,7 +66,6 @@ public:
     bool isValid() const;
 
     QString generatePassword() const;
-    int getbits() const;
 
     static const int DefaultLength = 16;
     static const char* DefaultExcludedChars;
@@ -87,9 +86,9 @@ public:
 
 private:
     QVector<PasswordGroup> passwordGroups() const;
-    int numCharClasses() const;
+    size_t numCharClasses() const;
 
-    int m_length;
+    std::size_t m_length;
     CharClasses m_classes;
     GeneratorFlags m_flags;
     QString m_excluded;
