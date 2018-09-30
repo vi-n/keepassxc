@@ -25,10 +25,23 @@
 #endif
 
 #include <QProcess>
-#include <QTextStream>
 
 namespace Utils
 {
+/**
+ * STDOUT file handle for the CLI.
+ */
+FILE* STDOUT = stdout;
+
+/**
+ * STDERR file handle for the CLI.
+ */
+FILE* STDERR = stderr;
+
+/**
+ * STDIN file handle for the CLI.
+ */
+FILE* STDIN = stdin;
 
 void setStdinEcho(bool enable = true)
 {
@@ -87,16 +100,16 @@ QString getPassword()
         return password;
     }
 
-    static QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    static QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    static QTextStream in(stdin, QIODevice::ReadOnly);
+    static QTextStream out(stdout, QIODevice::WriteOnly);
 
     setStdinEcho(false);
-    QString line = inputTextStream.readLine();
+    QString line = in.readLine();
     setStdinEcho(true);
 
     // The new line was also not echoed, but we do want to echo it.
-    outputTextStream << "\n";
-    outputTextStream.flush();
+    out << "\n";
+    out.flush();
 
     return line;
 }
@@ -104,12 +117,10 @@ QString getPassword()
 /**
  * A valid and running event loop is needed to use the global QClipboard,
  * so we need to use this from the CLI.
- *
- * @param errorOutputHandle file handle for error output stream
  */
-int clipText(const QString& text, FILE* errorOutputHandle)
+int clipText(const QString& text)
 {
-    QTextStream errorOutput(errorOutputHandle);
+    QTextStream err(Utils::STDERR);
 
     QString programName = "";
     QStringList arguments;
@@ -130,8 +141,8 @@ int clipText(const QString& text, FILE* errorOutputHandle)
 #endif
 
     if (programName.isEmpty()) {
-        errorOutput << QObject::tr("No program defined for clipboard manipulation");
-        errorOutput.flush();
+        err << QObject::tr("No program defined for clipboard manipulation");
+        err.flush();
         return EXIT_FAILURE;
     }
 
@@ -140,8 +151,8 @@ int clipText(const QString& text, FILE* errorOutputHandle)
     clipProcess->waitForStarted();
 
     if (clipProcess->state() != QProcess::Running) {
-        errorOutput << QObject::tr("Unable to start program %1").arg(programName);
-        errorOutput.flush();
+        err << QObject::tr("Unable to start program %1").arg(programName);
+        err.flush();
         return EXIT_FAILURE;
     }
 

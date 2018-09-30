@@ -41,12 +41,12 @@ Add::~Add()
 
 int Add::execute(const QStringList& arguments)
 {
-    QTextStream inputTextStream(s_inputDescriptor, QIODevice::ReadOnly);
-    QTextStream outputTextStream(s_outputDescriptor, QIODevice::WriteOnly);
-    QTextStream errorTextStream(s_errorOutputDescriptor, QIODevice::WriteOnly);
+    QTextStream inputTextStream(Utils::STDIN, QIODevice::ReadOnly);
+    QTextStream outputTextStream(Utils::STDOUT, QIODevice::WriteOnly);
+    QTextStream errorTextStream(Utils::STDERR, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
 
     QCommandLineOption keyFile(QStringList() << "k"
@@ -92,7 +92,7 @@ int Add::execute(const QStringList& arguments)
     const QString& databasePath = args.at(0);
     const QString& entryPath = args.at(1);
 
-    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }

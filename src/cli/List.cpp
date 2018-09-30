@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "List.h"
+#include "cli/Utils.h"
 
 #include <QCommandLineParser>
 #include <QTextStream>
@@ -39,10 +40,10 @@ List::~List()
 
 int List::execute(const QStringList& arguments)
 {
-    QTextStream out(stdout);
+    QTextStream out(Utils::STDOUT);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
     parser.addPositionalArgument("group", QObject::tr("Path of the group to list. Default is /"), QString("[group]"));
     QCommandLineOption keyFile(QStringList() << "k"
@@ -58,23 +59,24 @@ int List::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
 
     if (args.size() == 2) {
-        return this->listGroup(db, args.at(1));
+        return listGroup(db, args.at(1));
     }
-    return this->listGroup(db);
+    return listGroup(db);
 }
 
 int List::listGroup(Database* database, QString groupPath)
 {
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
+
     if (groupPath.isEmpty()) {
-        outputTextStream << database->rootGroup()->print();
-        outputTextStream.flush();
+        out << database->rootGroup()->print();
+        out.flush();
         return EXIT_SUCCESS;
     }
 
@@ -84,7 +86,7 @@ int List::listGroup(Database* database, QString groupPath)
         return EXIT_FAILURE;
     }
 
-    outputTextStream << group->print();
-    outputTextStream.flush();
+    out << group->print();
+    out.flush();
     return EXIT_SUCCESS;
 }

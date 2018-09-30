@@ -59,21 +59,23 @@ void TestCli::init()
     m_stdoutFile.reset(new QTemporaryFile());
     m_stdoutFile->open();
     m_stdoutHandle = fdopen(m_stdoutFile->handle(), "r+");
-    Command::setOutputDescriptor(m_stdoutHandle);
+    Utils::STDOUT = m_stdoutHandle;
 
     m_stderrFile.reset(new QTemporaryFile());
     m_stderrFile->open();
     m_stderrHandle = fdopen(m_stderrFile->handle(), "r+");
-    Command::setErrorOutputDescriptor(m_stderrHandle);
+    Utils::STDERR = m_stderrHandle;
 }
 
 void TestCli::cleanup()
 {
     m_dbFile.reset();
     m_stdoutFile.reset();
+    Utils::STDOUT = stdout;
     m_stdoutHandle = stdout;
     m_stderrFile.reset();
-    m_stderrHandle = stdout;
+    m_stderrHandle = stderr;
+    Utils::STDERR = stderr;
 }
 
 void TestCli::cleanupTestCase()
@@ -112,9 +114,9 @@ void TestCli::testClip()
     QClipboard* clipboard = QGuiApplication::clipboard();
     clipboard->clear();
 
-    Clip addCmd;
+    Clip clipCmd;
     Utils::setNextPassword("a");
-    addCmd.execute({"clip", m_dbFile->fileName(), "/Sample Entry"});
+    clipCmd.execute({"clip", m_dbFile->fileName(), "/Sample Entry"});
 
     m_stderrFile->reset();
     QString errorOutput(m_stderrFile->readAll());
@@ -129,7 +131,7 @@ void TestCli::testClip()
     QCOMPARE(clipboard->text(), QString("Password"));
 
     Utils::setNextPassword("a");
-    QFuture<void> future = QtConcurrent::run(&addCmd, &Clip::execute, QStringList{"clip", m_dbFile->fileName(), "/Sample Entry", "1"});
+    QFuture<void> future = QtConcurrent::run(&clipCmd, &Clip::execute, QStringList{"clip", m_dbFile->fileName(), "/Sample Entry", "1"});
 
     QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(), QString("Password"), 500);
     QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(), QString(""), 1500);

@@ -42,11 +42,10 @@ Clip::~Clip()
 
 int Clip::execute(const QStringList& arguments)
 {
-
-    QTextStream out(stdout);
+    QTextStream out(Utils::STDOUT);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
     QCommandLineOption keyFile(QStringList() << "k"
                                              << "key-file",
@@ -64,36 +63,36 @@ int Clip::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (!db) {
         return EXIT_FAILURE;
     }
 
-    return this->clipEntry(db, args.at(1), args.value(2));
+    return clipEntry(db, args.at(1), args.value(2));
 }
 
 int Clip::clipEntry(Database* database, QString entryPath, QString timeout)
 {
-    QTextStream errorTextStream(s_errorOutputDescriptor);
+    QTextStream err(Utils::STDERR);
 
     int timeoutSeconds = 0;
     if (!timeout.isEmpty() && !timeout.toInt()) {
-        errorTextStream << QObject::tr("Invalid timeout value %1.").arg(timeout);
-        errorTextStream.flush();
+        err << QObject::tr("Invalid timeout value %1.").arg(timeout);
+        err.flush();
         return EXIT_FAILURE;
     } else if (!timeout.isEmpty()) {
         timeoutSeconds = timeout.toInt();
     }
 
-    QTextStream outputTextStream(s_outputDescriptor, QIODevice::WriteOnly);
+    QTextStream outputTextStream(Utils::STDOUT, QIODevice::WriteOnly);
     Entry* entry = database->rootGroup()->findEntry(entryPath);
     if (!entry) {
-        errorTextStream << QObject::tr("Entry %1 not found.").arg(entryPath);
-        errorTextStream.flush();
+        err << QObject::tr("Entry %1 not found.").arg(entryPath);
+        err.flush();
         return EXIT_FAILURE;
     }
 
-    int exitCode = Utils::clipText(entry->password(), s_errorOutputDescriptor);
+    int exitCode = Utils::clipText(entry->password());
     if (exitCode != EXIT_SUCCESS) {
         return exitCode;
     }
@@ -110,7 +109,7 @@ int Clip::clipEntry(Database* database, QString entryPath, QString timeout)
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         timeoutSeconds--;
     }
-    Utils::clipText("", s_errorOutputDescriptor);
+    Utils::clipText("");
     outputTextStream << "\nClipboard cleared!" << endl;
 
     return EXIT_SUCCESS;

@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "Generate.h"
+#include "cli/Utils.h"
 
 #include <QCommandLineParser>
 #include <QTextStream>
@@ -37,11 +38,11 @@ Generate::~Generate()
 
 int Generate::execute(const QStringList& arguments)
 {
-    QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream in(Utils::STDIN, QIODevice::ReadOnly);
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     QCommandLineOption len(QStringList() << "L"
                                          << "length",
                            QObject::tr("Length of the generated password"),
@@ -83,7 +84,7 @@ int Generate::execute(const QStringList& arguments)
 
     const QStringList args = parser.positionalArguments();
     if (!args.isEmpty()) {
-        outputTextStream << parser.helpText().replace("keepassxc-cli", "keepassxc-cli generate");
+        out << parser.helpText().replace("keepassxc-cli", "keepassxc-cli generate");
         return EXIT_FAILURE;
     }
 
@@ -93,7 +94,7 @@ int Generate::execute(const QStringList& arguments)
         passwordGenerator.setLength(PasswordGenerator::DefaultLength);
     } else {
         int length = parser.value(len).toInt();
-        passwordGenerator.setLength(length);
+        passwordGenerator.setLength(static_cast<size_t>(length));
     }
 
     PasswordGenerator::CharClasses classes = 0x0;
@@ -128,12 +129,12 @@ int Generate::execute(const QStringList& arguments)
     passwordGenerator.setExcludedChars(parser.value(exclude));
 
     if (!passwordGenerator.isValid()) {
-        outputTextStream << parser.helpText().replace("keepassxc-cli", "keepassxc-cli generate");
+        out << parser.helpText().replace("keepassxc-cli", "keepassxc-cli generate");
         return EXIT_FAILURE;
     }
 
     QString password = passwordGenerator.generatePassword();
-    outputTextStream << password << endl;
+    out << password << endl;
 
     return EXIT_SUCCESS;
 }

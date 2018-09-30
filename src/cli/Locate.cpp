@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
  *
@@ -25,6 +27,7 @@
 #include <QTextStream>
 
 #include "cli/Utils.h"
+#include "core/Global.h"
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
@@ -41,11 +44,10 @@ Locate::~Locate()
 
 int Locate::execute(const QStringList& arguments)
 {
-
-    QTextStream out(stdout);
+    QTextStream out(Utils::STDOUT);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
     parser.addPositionalArgument("term", QObject::tr("Search term."));
     QCommandLineOption keyFile(QStringList() << "k"
@@ -61,25 +63,25 @@ int Locate::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (!db) {
         return EXIT_FAILURE;
     }
 
-    return this->locateEntry(db, args.at(1));
+    return locateEntry(db, args.at(1));
 }
 
 int Locate::locateEntry(Database* database, QString searchTerm)
 {
 
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
-    QStringList results = database->rootGroup()->locate(searchTerm);
+    QTextStream outputTextStream(Utils::STDOUT, QIODevice::WriteOnly);
+    QStringList results = database->rootGroup()->locate(std::move(searchTerm));
     if (results.isEmpty()) {
         outputTextStream << "No results for that search term" << endl;
         return EXIT_SUCCESS;
     }
 
-    for (QString result : results) {
+    for (const QString& result : asConst(results)) {
         outputTextStream << result << endl;
     }
     return EXIT_SUCCESS;

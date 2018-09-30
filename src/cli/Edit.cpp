@@ -41,12 +41,11 @@ Edit::~Edit()
 
 int Edit::execute(const QStringList& arguments)
 {
-
-    QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream in(Utils::STDIN, QIODevice::ReadOnly);
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
 
     QCommandLineOption keyFile(QStringList() << "k"
@@ -91,14 +90,14 @@ int Edit::execute(const QStringList& arguments)
 
     const QStringList args = parser.positionalArguments();
     if (args.size() != 2) {
-        outputTextStream << parser.helpText().replace("keepassxc-cli", "keepassxc-cli edit");
+        out << parser.helpText().replace("keepassxc-cli", "keepassxc-cli edit");
         return EXIT_FAILURE;
     }
 
-    QString databasePath = args.at(0);
-    QString entryPath = args.at(1);
+    const QString& databasePath = args.at(0);
+    const QString& entryPath = args.at(1);
 
-    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
@@ -137,8 +136,8 @@ int Edit::execute(const QStringList& arguments)
     }
 
     if (parser.isSet(prompt)) {
-        outputTextStream << "Enter new password for entry: ";
-        outputTextStream.flush();
+        out << "Enter new password for entry: ";
+        out.flush();
         QString password = Utils::getPassword();
         entry->setPassword(password);
     } else if (parser.isSet(generate)) {
@@ -147,7 +146,7 @@ int Edit::execute(const QStringList& arguments)
         if (passwordLength.isEmpty()) {
             passwordGenerator.setLength(PasswordGenerator::DefaultLength);
         } else {
-            passwordGenerator.setLength(passwordLength.toInt());
+            passwordGenerator.setLength(static_cast<size_t>(passwordLength.toInt()));
         }
 
         passwordGenerator.setCharClasses(PasswordGenerator::DefaultCharset);
@@ -164,6 +163,6 @@ int Edit::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    outputTextStream << "Successfully edited entry " << entry->title() << "." << endl;
+    out << "Successfully edited entry " << entry->title() << "." << endl;
     return EXIT_SUCCESS;
 }

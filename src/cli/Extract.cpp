@@ -43,11 +43,11 @@ Extract::~Extract()
 
 int Extract::execute(const QStringList& arguments)
 {
-    QTextStream out(s_outputDescriptor);
-    QTextStream errorTextStream(s_errorOutputDescriptor);
+    QTextStream out(Utils::STDOUT);
+    QTextStream err(Utils::STDERR);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database to extract."));
     QCommandLineOption keyFile(QStringList() << "k"
                                              << "key-file",
@@ -77,16 +77,16 @@ int Extract::execute(const QStringList& arguments)
         auto fileKey = QSharedPointer<FileKey>::create();
         QString errorMsg;
         if (!fileKey->load(keyFilePath, &errorMsg)) {
-            errorTextStream << QObject::tr("Failed to load key file %1 : %2").arg(keyFilePath).arg(errorMsg);
-            errorTextStream << endl;
+            err << QObject::tr("Failed to load key file %1 : %2").arg(keyFilePath).arg(errorMsg);
+            err << endl;
             return EXIT_FAILURE;
         }
 
         if (fileKey->type() != FileKey::Hashed) {
-            errorTextStream << QObject::tr("WARNING: You are using a legacy key file format which may become\n"
+            err << QObject::tr("WARNING: You are using a legacy key file format which may become\n"
                                            "unsupported in the future.\n\n"
                                            "Please consider generating a new key file.");
-            errorTextStream << endl;
+            err << endl;
         }
 
         compositeKey->addKey(fileKey);

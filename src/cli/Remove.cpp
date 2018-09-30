@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
  *  Copyright (C) 2017 KeePassXC Team <team@keepassxc.org>
  *
@@ -44,7 +46,7 @@ Remove::~Remove()
 
 int Remove::execute(const QStringList& arguments)
 {
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream out(Utils::STDERR, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::translate("main", "Remove an entry from the database."));
@@ -59,22 +61,22 @@ int Remove::execute(const QStringList& arguments)
 
     const QStringList args = parser.positionalArguments();
     if (args.size() != 2) {
-        outputTextStream << parser.helpText().replace("keepassxc-cli", "keepassxc-cli rm");
+        out << parser.helpText().replace("keepassxc-cli", "keepassxc-cli rm");
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
 
-    return this->removeEntry(db, args.at(0), args.at(1));
+    return removeEntry(db, args.at(0), args.at(1));
 }
 
 int Remove::removeEntry(Database* database, QString databasePath, QString entryPath)
 {
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
 
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
     Entry* entry = database->rootGroup()->findEntryByPath(entryPath);
     if (!entry) {
         qCritical("Entry %s not found.", qPrintable(entryPath));
@@ -90,16 +92,16 @@ int Remove::removeEntry(Database* database, QString databasePath, QString entryP
         database->recycleEntry(entry);
     };
 
-    QString errorMessage = database->saveToFile(databasePath);
+    QString errorMessage = database->saveToFile(std::move(databasePath));
     if (!errorMessage.isEmpty()) {
         qCritical("Unable to save database to file : %s", qPrintable(errorMessage));
         return EXIT_FAILURE;
     }
 
     if (recycled) {
-        outputTextStream << "Successfully recycled entry " << entryTitle << "." << endl;
+        out << "Successfully recycled entry " << entryTitle << "." << endl;
     } else {
-        outputTextStream << "Successfully deleted entry " << entryTitle << "." << endl;
+        out << "Successfully deleted entry " << entryTitle << "." << endl;
     }
 
     return EXIT_SUCCESS;

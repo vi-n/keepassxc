@@ -26,6 +26,8 @@
 #include "core/Database.h"
 #include "core/Entry.h"
 #include "core/Group.h"
+#include "core/Global.h"
+#include "Utils.h"
 
 Show::Show()
 {
@@ -39,10 +41,10 @@ Show::~Show()
 
 int Show::execute(const QStringList& arguments)
 {
-    QTextStream out(stdout);
+    QTextStream out(Utils::STDOUT);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
     QCommandLineOption keyFile(QStringList() << "k"
                                              << "key-file",
@@ -67,19 +69,18 @@ int Show::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
 
-    return this->showEntry(db, parser.values(attributes), args.at(1));
+    return showEntry(db, parser.values(attributes), args.at(1));
 }
 
 int Show::showEntry(Database* database, QStringList attributes, QString entryPath)
 {
-
-    QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream in(Utils::STDIN, QIODevice::ReadOnly);
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
 
     Entry* entry = database->rootGroup()->findEntry(entryPath);
     if (!entry) {
@@ -95,16 +96,16 @@ int Show::showEntry(Database* database, QStringList attributes, QString entryPat
 
     // Iterate over the attributes and output them line-by-line.
     bool sawUnknownAttribute = false;
-    for (QString attribute : attributes) {
+    for (const QString& attribute : asConst(attributes)) {
         if (!entry->attributes()->contains(attribute)) {
             sawUnknownAttribute = true;
             qCritical("ERROR: unknown attribute '%s'.", qPrintable(attribute));
             continue;
         }
         if (showAttributeNames) {
-            outputTextStream << attribute << ": ";
+            out << attribute << ": ";
         }
-        outputTextStream << entry->resolveMultiplePlaceholders(entry->attributes()->value(attribute)) << endl;
+        out << entry->resolveMultiplePlaceholders(entry->attributes()->value(attribute)) << endl;
     }
     return sawUnknownAttribute ? EXIT_FAILURE : EXIT_SUCCESS;
 }

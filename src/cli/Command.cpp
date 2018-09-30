@@ -37,10 +37,6 @@
 
 QMap<QString, Command*> commands;
 
-FILE* Command::s_outputDescriptor = stdout;
-FILE* Command::s_errorOutputDescriptor = stderr;
-FILE* Command::s_inputDescriptor = stdin;
-
 Command::~Command()
 {
 }
@@ -50,44 +46,14 @@ int Command::execute(const QStringList&)
     return EXIT_FAILURE;
 }
 
-/**
- * Change the output file descriptor, e.g., redirect it to a file.
- *
- * @param descriptor new descriptor
- */
-void Command::setOutputDescriptor(FILE* descriptor)
-{
-    s_outputDescriptor = descriptor;
-}
-
-/**
- * Change the error output file descriptor, e.g., redirect it to a file.
- *
- * @param descriptor new descriptor
- */
-void Command::setErrorOutputDescriptor(FILE* descriptor)
-{
-    s_errorOutputDescriptor = descriptor;
-}
-
-/**
- * Change the input file descriptor, e.g., read from a file.
- *
- * @param descriptor new descriptor
- */
-void Command::setInputDescriptor(FILE* descriptor)
-{
-    s_inputDescriptor = descriptor;
-}
-
 QString Command::getDescriptionLine()
 {
 
-    QString response = this->name;
+    QString response = name;
     QString space(" ");
-    QString spaces = space.repeated(15 - this->name.length());
+    QString spaces = space.repeated(15 - name.length());
     response = response.append(spaces);
-    response = response.append(this->description);
+    response = response.append(description);
     response = response.append("\n");
     return response;
 }

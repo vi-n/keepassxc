@@ -16,6 +16,7 @@
  */
 
 #include "Estimate.h"
+#include "cli/Utils.h"
 
 #include <QCommandLineParser>
 #include <QTextStream>
@@ -45,7 +46,7 @@ Estimate::~Estimate()
 static void estimate(const char* pwd, bool advanced)
 {
     double e;
-    int len = strlen(pwd);
+    int len = static_cast<int>(strlen(pwd));
     if (!advanced) {
         e = ZxcvbnMatch(pwd, 0, 0);
         printf("Length %d\tEntropy %.3f\tLog10 %.3f\n", len, e, e * 0.301029996);
@@ -140,11 +141,11 @@ static void estimate(const char* pwd, bool advanced)
 
 int Estimate::execute(const QStringList& arguments)
 {
-    QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream in(Utils::STDIN, QIODevice::ReadOnly);
+    QTextStream out(Utils::STDOUT, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("password", QObject::tr("Password for which to estimate the entropy."), "[password]");
     QCommandLineOption advancedOption(QStringList() << "a"
                                                     << "advanced",
@@ -154,7 +155,7 @@ int Estimate::execute(const QStringList& arguments)
 
     const QStringList args = parser.positionalArguments();
     if (args.size() > 1) {
-        outputTextStream << parser.helpText().replace("keepassxc-cli", "keepassxc-cli estimate");
+        out << parser.helpText().replace("keepassxc-cli", "keepassxc-cli estimate");
         return EXIT_FAILURE;
     }
 
@@ -162,7 +163,7 @@ int Estimate::execute(const QStringList& arguments)
     if (args.size() == 1) {
         password = args.at(0);
     } else {
-        password = inputTextStream.readLine();
+        password = in.readLine();
     }
 
     estimate(password.toLatin1(), parser.isSet(advancedOption));

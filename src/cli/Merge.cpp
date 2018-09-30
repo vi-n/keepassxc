@@ -24,6 +24,7 @@
 
 #include "core/Database.h"
 #include "core/Merger.h"
+#include "cli/Utils.h"
 
 Merge::Merge()
 {
@@ -37,10 +38,10 @@ Merge::~Merge()
 
 int Merge::execute(const QStringList& arguments)
 {
-    QTextStream out(stdout);
+    QTextStream out(Utils::STDOUT);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(this->description);
+    parser.setApplicationDescription(description);
     parser.addPositionalArgument("database1", QObject::tr("Path of the database to merge into."));
     parser.addPositionalArgument("database2", QObject::tr("Path of the database to merge from."));
 
@@ -68,14 +69,14 @@ int Merge::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db1 = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
+    Database* db1 = Database::unlockFromStdin(args.at(0), parser.value(keyFile), Utils::STDOUT, Utils::STDERR);
     if (db1 == nullptr) {
         return EXIT_FAILURE;
     }
 
     Database* db2;
     if (!parser.isSet("same-credentials")) {
-        db2 = Database::unlockFromStdin(args.at(1), parser.value(keyFileFrom), s_outputDescriptor);
+        db2 = Database::unlockFromStdin(args.at(1), parser.value(keyFileFrom), Utils::STDOUT, Utils::STDERR);
     } else {
         db2 = Database::openDatabaseFile(args.at(1), db1->key());
     }
