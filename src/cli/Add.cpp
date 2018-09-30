@@ -41,9 +41,8 @@ Add::~Add()
 
 int Add::execute(const QStringList& arguments)
 {
-
-    QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
-    QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
+    QTextStream inputTextStream(s_inputDescriptor, QIODevice::ReadOnly);
+    QTextStream outputTextStream(s_outputDescriptor, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
     parser.setApplicationDescription(this->description);
@@ -92,7 +91,7 @@ int Add::execute(const QStringList& arguments)
     const QString& databasePath = args.at(0);
     const QString& entryPath = args.at(1);
 
-    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile));
+    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), s_outputDescriptor);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
@@ -130,7 +129,7 @@ int Add::execute(const QStringList& arguments)
         if (passwordLength.isEmpty()) {
             passwordGenerator.setLength(PasswordGenerator::DefaultLength);
         } else {
-            passwordGenerator.setLength(passwordLength.toInt());
+            passwordGenerator.setLength(static_cast<size_t>(passwordLength.toInt()));
         }
 
         passwordGenerator.setCharClasses(PasswordGenerator::DefaultCharset);

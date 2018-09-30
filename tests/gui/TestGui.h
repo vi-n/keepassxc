@@ -19,13 +19,13 @@
 #ifndef KEEPASSX_TESTGUI_H
 #define KEEPASSX_TESTGUI_H
 
-#include "util/TemporaryFile.h"
 #include "gui/MainWindow.h"
 #include "gui/DatabaseTabWidget.h"
 
 #include <QAbstractItemModel>
 #include <QObject>
 #include <QPointer>
+#include <QTemporaryFile>
 
 class Database;
 class DatabaseWidget;
@@ -89,7 +89,7 @@ private:
     QPointer<DatabaseWidget> m_dbWidget;
     QPointer<Database> m_db;
     QByteArray m_dbData;
-    TemporaryFile m_dbFile;
+    QScopedPointer<QTemporaryFile> m_dbFile;
     QString m_dbFileName;
     QString m_dbFilePath;
 };

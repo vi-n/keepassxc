@@ -68,14 +68,14 @@ int Merge::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db1 = Database::unlockFromStdin(args.at(0), parser.value(keyFile));
+    Database* db1 = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
     if (db1 == nullptr) {
         return EXIT_FAILURE;
     }
 
     Database* db2;
     if (!parser.isSet("same-credentials")) {
-        db2 = Database::unlockFromStdin(args.at(1), parser.value(keyFileFrom));
+        db2 = Database::unlockFromStdin(args.at(1), parser.value(keyFileFrom), s_outputDescriptor);
     } else {
         db2 = Database::openDatabaseFile(args.at(1), db1->key());
     }

@@ -501,11 +501,11 @@ Database* Database::openDatabaseFile(const QString& fileName, QSharedPointer<con
     return db;
 }
 
-Database* Database::unlockFromStdin(QString databaseFilename, QString keyFilename)
+Database* Database::unlockFromStdin(QString databaseFilename, QString keyFilename, FILE* outputDescriptor, FILE* errorDescriptor)
 {
     auto compositeKey = QSharedPointer<CompositeKey>::create();
-    QTextStream outputTextStream(stdout);
-    QTextStream errorTextStream(stderr);
+    QTextStream outputTextStream(outputDescriptor);
+    QTextStream errorTextStream(errorDescriptor);
 
     outputTextStream << QObject::tr("Insert password to unlock %1: ").arg(databaseFilename);
     outputTextStream.flush();

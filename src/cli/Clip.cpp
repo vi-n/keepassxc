@@ -64,7 +64,7 @@ int Clip::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile));
+    Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile), s_outputDescriptor);
     if (!db) {
         return EXIT_FAILURE;
     }

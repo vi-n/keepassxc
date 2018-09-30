@@ -34,7 +34,6 @@
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSpinBox>
-#include <QTemporaryFile>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
@@ -105,13 +104,13 @@ void TestGui::initTestCase()
 // Every test starts with opening the temp database
 void TestGui::init()
 {
+    m_dbFile.reset(new QTemporaryFile());
     // Write the temp storage to a temp database file for use in our tests
-    QVERIFY(m_dbFile.open());
-    QCOMPARE(m_dbFile.write(m_dbData), static_cast<qint64>((m_dbData.size())));
-    m_dbFile.close();
-
-    m_dbFileName = m_dbFile.fileName();
-    m_dbFilePath = m_dbFile.filePath();
+    QVERIFY(m_dbFile->open());
+    QCOMPARE(m_dbFile->write(m_dbData), static_cast<qint64>((m_dbData.size())));
+    m_dbFileName = QFileInfo(m_dbFile->fileName()).fileName();
+    m_dbFilePath = m_dbFile->fileName();
+    m_dbFile->close();
 
     fileDialog()->setNextFileName(m_dbFilePath);
     triggerAction("actionDatabaseOpen");
@@ -144,11 +143,13 @@ void TestGui::cleanup()
     if (m_dbWidget) {
         delete m_dbWidget;
     }
+
+    m_dbFile->remove();
 }
 
 void TestGui::cleanupTestCase()
 {
-    m_dbFile.remove();
+    m_dbFile->remove();
 }
 
 void TestGui::testSettingsDefaultTabOrder()
@@ -287,12 +288,13 @@ void TestGui::createDatabaseCallback()
     QCOMPARE(fileCombo->currentText(), QString("%1/%2").arg(QString(KEEPASSX_TEST_DATA_DIR), "FileKeyHashed.key"));
 
     // save database to temporary file
-    TemporaryFile tmpFile;
+    QTemporaryFile tmpFile;
     QVERIFY(tmpFile.open());
     tmpFile.close();
-    fileDialog()->setNextFileName(tmpFile.filePath());
+    fileDialog()->setNextFileName(tmpFile.fileName());
 
     QTest::keyClick(fileCombo, Qt::Key::Key_Enter);
+    tmpFile.remove();
 }
 
 void TestGui::testMergeDatabase()
@@ -340,9 +342,9 @@ void TestGui::testAutoreloadDatabase()
     // Test accepting new file in autoreload
     MessageBox::setNextAnswer(QMessageBox::Yes);
     // Overwrite the current database with the temp data
-    QVERIFY(m_dbFile.open());
-    QVERIFY(m_dbFile.write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
-    m_dbFile.close();
+    QVERIFY(m_dbFile->open());
+    QVERIFY(m_dbFile->write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
+    m_dbFile->close();
     Tools::wait(1500);
 
     m_db = m_dbWidget->database();
@@ -358,9 +360,9 @@ void TestGui::testAutoreloadDatabase()
     // Test rejecting new file in autoreload
     MessageBox::setNextAnswer(QMessageBox::No);
     // Overwrite the current temp database with a new file
-    m_dbFile.open();
-    QVERIFY(m_dbFile.write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
-    m_dbFile.close();
+    m_dbFile->open();
+    QVERIFY(m_dbFile->write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
+    m_dbFile->close();
     Tools::wait(1500);
 
     m_db = m_dbWidget->database();
@@ -382,9 +384,9 @@ void TestGui::testAutoreloadDatabase()
     // This is saying yes to merging the entries
     MessageBox::setNextAnswer(QMessageBox::Yes);
     // Overwrite the current database with the temp data
-    QVERIFY(m_dbFile.open());
-    QVERIFY(m_dbFile.write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
-    m_dbFile.close();
+    QVERIFY(m_dbFile->open());
+    QVERIFY(m_dbFile->write(unmodifiedMergeDatabase, static_cast<qint64>(unmodifiedMergeDatabase.size())));
+    m_dbFile->close();
     Tools::wait(1500);
 
     m_db = m_dbWidget->database();
@@ -1083,6 +1085,7 @@ void TestGui::testSaveAs()
 
     fileInfo.refresh();
     QCOMPARE(fileInfo.lastModified(), lastModified);
+    tmpFile.remove();
 }
 
 void TestGui::testSave()

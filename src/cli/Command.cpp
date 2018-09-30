@@ -37,6 +37,9 @@
 
 QMap<QString, Command*> commands;
 
+FILE* Command::s_outputDescriptor = stdout;
+FILE* Command::s_inputDescriptor = stdin;
+
 Command::~Command()
 {
 }
@@ -44,6 +47,26 @@ Command::~Command()
 int Command::execute(const QStringList&)
 {
     return EXIT_FAILURE;
+}
+
+/**
+ * Change the output file descriptor, e.g., redirect it to a file.
+ *
+ * @param descriptor new descriptor
+ */
+void Command::setOutputDescriptor(FILE* descriptor)
+{
+    s_outputDescriptor = descriptor;
+}
+
+/**
+ * Change the input file descriptor, e.g., read from a file.
+ *
+ * @param descriptor new descriptor
+ */
+void Command::setInputDescriptor(FILE* descriptor)
+{
+    s_inputDescriptor = descriptor;
 }
 
 QString Command::getDescriptionLine()

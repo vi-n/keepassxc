@@ -59,17 +59,18 @@ void setStdinEcho(bool enable = true)
 #endif
 }
 
-static QString nextPassword = {};
+static QStringList nextPasswords = {};
 
 /**
  * Set the next password returned by \link getPassword() instead of reading it from STDIN.
+ * Multiple calls to this method will fill a queue of passwords.
  * This function is intended for testing purposes.
  *
  * @param password password to return next
  */
 void setNextPassword(const QString& password)
 {
-    nextPassword = password;
+    nextPasswords.append(password);
 }
 
 /**
@@ -81,9 +82,8 @@ void setNextPassword(const QString& password)
 QString getPassword()
 {
     // return preset password if one is set
-    if (!nextPassword.isNull()) {
-        auto password = nextPassword;
-        nextPassword.clear();
+    if (!nextPasswords.isEmpty()) {
+        auto password = nextPasswords.takeFirst();
         return password;
     }
 

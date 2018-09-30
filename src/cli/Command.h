@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QTextStream>
 
 #include "core/Database.h"
 
@@ -34,8 +35,15 @@ public:
     QString description;
     QString getDescriptionLine();
 
+    static void setOutputDescriptor(FILE* descriptor);
+    static void setInputDescriptor(FILE* descriptor);
+
     static QList<Command*> getCommands();
     static Command* getCommand(QString commandName);
+
+protected:
+    static FILE* s_outputDescriptor;
+    static FILE* s_inputDescriptor;
 };
 
 #endif // KEEPASSXC_COMMAND_H

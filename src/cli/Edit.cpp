@@ -98,7 +98,7 @@ int Edit::execute(const QStringList& arguments)
     QString databasePath = args.at(0);
     QString entryPath = args.at(1);
 
-    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile));
+    Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile), s_outputDescriptor);
     if (db == nullptr) {
         return EXIT_FAILURE;
     }
