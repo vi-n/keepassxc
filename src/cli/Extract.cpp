@@ -43,8 +43,8 @@ Extract::~Extract()
 
 int Extract::execute(const QStringList& arguments)
 {
-    QTextStream out(stdout);
-    QTextStream errorTextStream(stderr);
+    QTextStream out(s_outputDescriptor);
+    QTextStream errorTextStream(s_errorOutputDescriptor);
 
     QCommandLineParser parser;
     parser.setApplicationDescription(this->description);
@@ -92,7 +92,7 @@ int Extract::execute(const QStringList& arguments)
         compositeKey->addKey(fileKey);
     }
 
-    QString databaseFilename = args.at(0);
+    const QString& databaseFilename = args.at(0);
     QFile dbFile(databaseFilename);
     if (!dbFile.exists()) {
         qCritical("File %s does not exist.", qPrintable(databaseFilename));

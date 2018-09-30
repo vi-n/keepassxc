@@ -19,13 +19,14 @@
 #define KEEPASSXC_UTILS_H
 
 #include <QtCore/qglobal.h>
+#include <QTextStream>
 
 namespace Utils
 {
 void setStdinEcho(bool enable);
 QString getPassword();
 void setNextPassword(const QString& password);
-int clipText(const QString& text);
+int clipText(const QString& text, FILE* errorOutputHandle = stderr);
 };
 
 #endif // KEEPASSXC_UTILS_H

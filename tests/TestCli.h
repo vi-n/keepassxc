@@ -41,7 +41,9 @@ private:
     QByteArray m_dbData;
     QScopedPointer<QTemporaryFile> m_dbFile;
     QScopedPointer<QTemporaryFile> m_stdoutFile;
+    QScopedPointer<QTemporaryFile> m_stderrFile;
     FILE* m_stdoutHandle = stdout;
+    FILE* m_stderrHandle = stderr;
 };
 
 #endif //KEEPASSXC_TESTCLI_H

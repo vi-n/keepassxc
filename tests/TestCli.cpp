@@ -24,8 +24,12 @@
 
 #include "cli/Utils.h"
 #include "cli/Add.h"
+#include "cli/Clip.h"
 
 #include <QFile>
+#include <QClipboard>
+#include <QFuture>
+#include <QtConcurrent>
 
 #include <cstdio>
 
@@ -56,6 +60,11 @@ void TestCli::init()
     m_stdoutFile->open();
     m_stdoutHandle = fdopen(m_stdoutFile->handle(), "r+");
     Command::setOutputDescriptor(m_stdoutHandle);
+
+    m_stderrFile.reset(new QTemporaryFile());
+    m_stderrFile->open();
+    m_stderrHandle = fdopen(m_stderrFile->handle(), "r+");
+    Command::setErrorOutputDescriptor(m_stderrHandle);
 }
 
 void TestCli::cleanup()
@@ -63,6 +72,8 @@ void TestCli::cleanup()
     m_dbFile.reset();
     m_stdoutFile.reset();
     m_stdoutHandle = stdout;
+    m_stderrFile.reset();
+    m_stderrHandle = stdout;
 }
 
 void TestCli::cleanupTestCase()
@@ -73,7 +84,7 @@ void TestCli::testAdd()
 {
     Add addCmd;
     Utils::setNextPassword("a");
-    addCmd.execute({"addx", "-u", "newuser", "--url", "https://example.com/", "-g", "-l", "20", m_dbFile->fileName(), "/newuser-entry"});
+    addCmd.execute({"add", "-u", "newuser", "--url", "https://example.com/", "-g", "-l", "20", m_dbFile->fileName(), "/newuser-entry"});
 
     Utils::setNextPassword("a");
     QScopedPointer<Database> db(Database::unlockFromStdin(m_dbFile->fileName(), "", m_stdoutHandle));
@@ -85,7 +96,7 @@ void TestCli::testAdd()
 
     Utils::setNextPassword("a");
     Utils::setNextPassword("newpassword");
-    addCmd.execute({"addx", "-u", "newuser2", "--url", "https://example.net/", "-g", "-l", "20", "-p", m_dbFile->fileName(), "/newuser-entry2"});
+    addCmd.execute({"add", "-u", "newuser2", "--url", "https://example.net/", "-g", "-l", "20", "-p", m_dbFile->fileName(), "/newuser-entry2"});
 
     Utils::setNextPassword("a");
     db.reset(Database::unlockFromStdin(m_dbFile->fileName(), "", m_stdoutHandle));
@@ -98,4 +109,30 @@ void TestCli::testAdd()
 
 void TestCli::testClip()
 {
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    clipboard->clear();
+
+    Clip addCmd;
+    Utils::setNextPassword("a");
+    addCmd.execute({"clip", m_dbFile->fileName(), "/Sample Entry"});
+
+    m_stderrFile->reset();
+    QString errorOutput(m_stderrFile->readAll());
+
+    // Skip test if clipboard tool is not installed instead of failing.
+    // Note that these strings may be translated, so this test isn't reliable.
+    if (errorOutput.contains("Unable to start program")
+        || errorOutput.contains("No program defined for clipboard manipulation")) {
+        QSKIP("Clip test skipped due to missing clipboard tool");
+    }
+
+    QCOMPARE(clipboard->text(), QString("Password"));
+
+    Utils::setNextPassword("a");
+    QFuture<void> future = QtConcurrent::run(&addCmd, &Clip::execute, QStringList{"clip", m_dbFile->fileName(), "/Sample Entry", "1"});
+
+    QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(), QString("Password"), 500);
+    QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(), QString(""), 1500);
+
+    future.waitForFinished();
 }

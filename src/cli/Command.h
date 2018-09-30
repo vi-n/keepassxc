@@ -36,6 +36,7 @@ public:
     QString getDescriptionLine();
 
     static void setOutputDescriptor(FILE* descriptor);
+    static void setErrorOutputDescriptor(FILE* descriptor);
     static void setInputDescriptor(FILE* descriptor);
 
     static QList<Command*> getCommands();
@@ -43,6 +44,7 @@ public:
 
 protected:
     static FILE* s_outputDescriptor;
+    static FILE* s_errorOutputDescriptor;
     static FILE* s_inputDescriptor;
 };
 

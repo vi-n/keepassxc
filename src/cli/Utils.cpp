@@ -101,12 +101,15 @@ QString getPassword()
     return line;
 }
 
-/*
+/**
  * A valid and running event loop is needed to use the global QClipboard,
  * so we need to use this from the CLI.
+ *
+ * @param errorOutputHandle file handle for error output stream
  */
-int clipText(const QString& text)
+int clipText(const QString& text, FILE* errorOutputHandle)
 {
+    QTextStream errorOutput(errorOutputHandle);
 
     QString programName = "";
     QStringList arguments;
@@ -127,7 +130,8 @@ int clipText(const QString& text)
 #endif
 
     if (programName.isEmpty()) {
-        qCritical("No program defined for clipboard manipulation");
+        errorOutput << QObject::tr("No program defined for clipboard manipulation");
+        errorOutput.flush();
         return EXIT_FAILURE;
     }
 
@@ -136,7 +140,8 @@ int clipText(const QString& text)
     clipProcess->waitForStarted();
 
     if (clipProcess->state() != QProcess::Running) {
-        qCritical("Unable to start program %s", qPrintable(programName));
+        errorOutput << QObject::tr("Unable to start program %1").arg(programName);
+        errorOutput.flush();
         return EXIT_FAILURE;
     }
 

@@ -43,6 +43,7 @@ int Add::execute(const QStringList& arguments)
 {
     QTextStream inputTextStream(s_inputDescriptor, QIODevice::ReadOnly);
     QTextStream outputTextStream(s_outputDescriptor, QIODevice::WriteOnly);
+    QTextStream errorTextStream(s_errorOutputDescriptor, QIODevice::WriteOnly);
 
     QCommandLineParser parser;
     parser.setApplicationDescription(this->description);
@@ -100,13 +101,15 @@ int Add::execute(const QStringList& arguments)
     // the entry.
     QString passwordLength = parser.value(length);
     if (!passwordLength.isEmpty() && !passwordLength.toInt()) {
-        qCritical("Invalid value for password length %s.", qPrintable(passwordLength));
+        errorTextStream << QObject::tr("Invalid value for password length %1.").arg(passwordLength);
+        errorTextStream.flush();
         return EXIT_FAILURE;
     }
 
     Entry* entry = db->rootGroup()->addEntryWithPath(entryPath);
     if (!entry) {
-        qCritical("Could not create entry with path %s.", qPrintable(entryPath));
+        errorTextStream << QObject::tr("Could not create entry with path %1.").arg(entryPath);
+        errorTextStream.flush();
         return EXIT_FAILURE;
     }
 
@@ -140,7 +143,8 @@ int Add::execute(const QStringList& arguments)
 
     QString errorMessage = db->saveToFile(databasePath);
     if (!errorMessage.isEmpty()) {
-        qCritical("Writing the database failed %s.", qPrintable(errorMessage));
+        errorTextStream << QObject::tr("Writing the database failed %1.").arg(errorMessage);
+        errorTextStream.flush();
         return EXIT_FAILURE;
     }
 

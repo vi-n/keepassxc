@@ -38,6 +38,7 @@
 QMap<QString, Command*> commands;
 
 FILE* Command::s_outputDescriptor = stdout;
+FILE* Command::s_errorOutputDescriptor = stderr;
 FILE* Command::s_inputDescriptor = stdin;
 
 Command::~Command()
@@ -57,6 +58,16 @@ int Command::execute(const QStringList&)
 void Command::setOutputDescriptor(FILE* descriptor)
 {
     s_outputDescriptor = descriptor;
+}
+
+/**
+ * Change the error output file descriptor, e.g., redirect it to a file.
+ *
+ * @param descriptor new descriptor
+ */
+void Command::setErrorOutputDescriptor(FILE* descriptor)
+{
+    s_errorOutputDescriptor = descriptor;
 }
 
 /**
