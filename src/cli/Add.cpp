@@ -89,8 +89,8 @@ int Add::execute(const QStringList& arguments)
         return EXIT_FAILURE;
     }
 
-    QString databasePath = args.at(0);
-    QString entryPath = args.at(1);
+    const QString& databasePath = args.at(0);
+    const QString& entryPath = args.at(1);
 
     Database* db = Database::unlockFromStdin(databasePath, parser.value(keyFile));
     if (db == nullptr) {

@@ -65,6 +65,11 @@ qint64 TemporaryFile::write(const char* data, qint64 maxSize)
 #endif
 }
 
+bool TemporaryFile::flush()
+{
+    return m_tempFile.flush();
+}
+
 qint64 TemporaryFile::write(const QByteArray& byteArray)
 {
 #ifdef Q_OS_WIN
@@ -90,4 +95,9 @@ QString TemporaryFile::filePath() const
 #else
     return m_tempFile.fileName();
 #endif
+}
+
+bool TemporaryFile::remove()
+{
+    return m_tempFile.remove();
 }

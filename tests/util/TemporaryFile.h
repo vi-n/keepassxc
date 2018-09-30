@@ -50,6 +50,8 @@ public:
     void close();
     qint64 write(const char* data, qint64 maxSize);
     qint64 write(const QByteArray& byteArray);
+    bool flush();
+    bool remove();
 
     QString fileName() const;
     QString filePath() const;

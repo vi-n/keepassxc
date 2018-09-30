@@ -27,7 +27,10 @@
 #include <QProcess>
 #include <QTextStream>
 
-void Utils::setStdinEcho(bool enable = true)
+namespace Utils
+{
+
+void setStdinEcho(bool enable = true)
 {
 #ifdef Q_OS_WIN
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -56,8 +59,34 @@ void Utils::setStdinEcho(bool enable = true)
 #endif
 }
 
-QString Utils::getPassword()
+static QString nextPassword = {};
+
+/**
+ * Set the next password returned by \link getPassword() instead of reading it from STDIN.
+ * This function is intended for testing purposes.
+ *
+ * @param password password to return next
+ */
+void setNextPassword(const QString& password)
 {
+    nextPassword = password;
+}
+
+/**
+ * Read a user password from STDIN or return a password previously
+ * set by \link setNextPassword().
+ *
+ * @return the password
+ */
+QString getPassword()
+{
+    // return preset password if one is set
+    if (!nextPassword.isNull()) {
+        auto password = nextPassword;
+        nextPassword.clear();
+        return password;
+    }
+
     static QTextStream inputTextStream(stdin, QIODevice::ReadOnly);
     static QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
 
@@ -76,7 +105,7 @@ QString Utils::getPassword()
  * A valid and running event loop is needed to use the global QClipboard,
  * so we need to use this from the CLI.
  */
-int Utils::clipText(const QString& text)
+int clipText(const QString& text)
 {
 
     QString programName = "";
@@ -102,7 +131,7 @@ int Utils::clipText(const QString& text)
         return EXIT_FAILURE;
     }
 
-    QProcess* clipProcess = new QProcess(nullptr);
+    auto* clipProcess = new QProcess(nullptr);
     clipProcess->start(programName, arguments);
     clipProcess->waitForStarted();
 
@@ -120,3 +149,5 @@ int Utils::clipText(const QString& text)
 
     return clipProcess->exitCode();
 }
+
+}   // namespace Utils

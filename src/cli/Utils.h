@@ -20,12 +20,12 @@
 
 #include <QtCore/qglobal.h>
 
-class Utils
+namespace Utils
 {
-public:
-    static void setStdinEcho(bool enable);
-    static QString getPassword();
-    static int clipText(const QString& text);
+void setStdinEcho(bool enable);
+QString getPassword();
+void setNextPassword(const QString& password);
+int clipText(const QString& text);
 };
 
 #endif // KEEPASSXC_UTILS_H
