@@ -31,8 +31,7 @@
 #include <cctype>
 
 #ifdef Q_OS_WIN
-#include <aclapi.h> // for SetSecurityInfo()
-#include <windows.h> // for Sleep(), SetDllDirectoryA(), SetSearchPathMode(), ...
+#include <windows.h> // for Sleep()
 #endif
 
 #ifdef Q_OS_UNIX

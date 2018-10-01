@@ -19,6 +19,11 @@
 #include "core/Config.h"
 #include "core/Translator.h"
 
+#ifdef Q_OS_WIN
+#include <aclapi.h> // for createWindowsDACL()
+#include <windows.h> // for Sleep(), SetDllDirectoryA(), SetSearchPathMode(), ...
+#endif
+
 namespace Bootstrap
 {
 /**
