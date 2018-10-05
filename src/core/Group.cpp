@@ -24,6 +24,8 @@
 #include "core/Global.h"
 #include "core/Metadata.h"
 
+#include <QRegularExpression>
+
 const int Group::DefaultIconNumber = 48;
 const int Group::RecycleBinIconNumber = 43;
 const QString Group::RootAutoTypeSequence = "{USERNAME}{TAB}{PASSWORD}{ENTER}";
@@ -962,8 +964,18 @@ Entry* Group::addEntryWithPath(QString entryPath)
         return nullptr;
     }
 
-    QStringList groups = entryPath.split("/");
-    QString entryTitle = groups.takeLast();
+    /* This looks ridiculous because of the C++ compiler escaping backslashes 
+     * in a string. What this says: 
+     * Match /      \\/ (we need to escape the slash, and to enter a backslash
+     *                   we need double backslashes)
+     * But not      (?<! )
+     *  match \/    \\\\\\/ we need to escape the backslash, so it's \\\\ for 
+     *                      the single backslash and \\/ for the forward slash 
+     */
+    QRegularExpression re("\\/(?<!\\\\\\/)");
+
+    QStringList groups = entryPath.split(re);
+    QString entryTitle = groups.takeLast().replace("\\/", "/");
     QString groupPath = groups.join("/");
     if (groupPath.isNull()) {
         groupPath = QString("");
