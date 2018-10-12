@@ -696,13 +696,24 @@ Group* Group::findGroupByPathRecursion(QString groupPath, QString basePath)
     return nullptr;
 }
 
-QString Group::print(bool recursive, int depth)
+QString Group::print(bool recursive, bool flatten, int depth)
 {
 
     QString response;
-    QString indentation = QString("  ").repeated(depth);
+    QString indentation;
+   
+    if(flatten) {
+        QStringList hierarchy = this->hierarchy();
+        hierarchy.removeFirst();
+        indentation = hierarchy.join('/');
+        if(!indentation.isEmpty()) {
+            indentation += '/';
+        }
+    } else {
+        indentation = QString("  ").repeated(depth);
+    }
 
-    if (entries().isEmpty() && children().isEmpty()) {
+    if (entries().isEmpty() && children().isEmpty() && !flatten) {
         response += indentation + tr("[empty]", "group has no children") + "\n";
         return response;
     }
@@ -714,7 +725,7 @@ QString Group::print(bool recursive, int depth)
     for (Group* innerGroup : children()) {
         response += indentation + innerGroup->name() + "/\n";
         if (recursive) {
-            response += innerGroup->print(recursive, depth + 1);
+            response += innerGroup->print(recursive, flatten, depth + 1);
         }
     }
 
