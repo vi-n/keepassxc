@@ -45,16 +45,18 @@ int List::execute(const QStringList& arguments)
     parser.setApplicationDescription(this->description);
     parser.addPositionalArgument("database", QObject::tr("Path of the database."));
     parser.addPositionalArgument("group", QObject::tr("Path of the group to list. Default is /"), QString("[group]"));
-    QCommandLineOption keyFile(QStringList() << "k"
-                                             << "key-file",
+    QCommandLineOption keyFile(QStringList() << "k" << "key-file",
                                QObject::tr("Key file of the database."),
                                QObject::tr("path"));
     parser.addOption(keyFile);
 
-    QCommandLineOption recursiveOption(QStringList() << "R"
-                                                     << "recursive",
+    QCommandLineOption recursiveOption(QStringList() << "R" << "recursive",
                                        QObject::tr("Recursive mode, list elements recursively"));
     parser.addOption(recursiveOption);
+
+    QCommandLineOption flattenOption(QStringList() << "f" << "flatten",
+                                       QObject::tr("Instead of indenting subelements of a group, prepend the path"));
+    parser.addOption(flattenOption);
     parser.process(arguments);
 
     const QStringList args = parser.positionalArguments();
@@ -64,6 +66,7 @@ int List::execute(const QStringList& arguments)
     }
 
     bool recursive = parser.isSet(recursiveOption);
+    bool flatten = parser.isSet(flattenOption);
 
     Database* db = Database::unlockFromStdin(args.at(0), parser.value(keyFile));
     if (db == nullptr) {
@@ -71,16 +74,16 @@ int List::execute(const QStringList& arguments)
     }
 
     if (args.size() == 2) {
-        return this->listGroup(db, recursive, args.at(1));
+        return this->listGroup(db, recursive, flatten, args.at(1));
     }
-    return this->listGroup(db, recursive);
+    return this->listGroup(db, recursive, flatten);
 }
 
-int List::listGroup(Database* database, bool recursive, QString groupPath)
+int List::listGroup(Database* database, bool recursive, bool flatten, QString groupPath)
 {
     QTextStream outputTextStream(stdout, QIODevice::WriteOnly);
     if (groupPath.isEmpty()) {
-        outputTextStream << database->rootGroup()->print(recursive);
+        outputTextStream << database->rootGroup()->print(recursive, flatten);
         outputTextStream.flush();
         return EXIT_SUCCESS;
     }
@@ -91,7 +94,7 @@ int List::listGroup(Database* database, bool recursive, QString groupPath)
         return EXIT_FAILURE;
     }
 
-    outputTextStream << group->print(recursive);
+    outputTextStream << group->print(recursive, flatten);
     outputTextStream.flush();
     return EXIT_SUCCESS;
 }

@@ -164,7 +164,7 @@ public:
                  CloneFlags groupFlags = DefaultCloneFlags) const;
 
     void copyDataFrom(const Group* other);
-    QString print(bool recursive = false, int depth = 0);
+    QString print(bool recursive = false, bool flatten = false, int depth = 0);
 
     void addEntry(Entry* entry);
     void removeEntry(Entry* entry);
