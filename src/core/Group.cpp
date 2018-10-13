@@ -723,7 +723,10 @@ QString Group::print(bool recursive, bool flatten, int depth)
     }
 
     for (Group* innerGroup : children()) {
-        response += indentation + innerGroup->name() + "/\n";
+        if(!flatten) {
+            response += indentation + innerGroup->name() + "/\n";
+        }
+
         if (recursive) {
             response += innerGroup->print(recursive, flatten, depth + 1);
         }
